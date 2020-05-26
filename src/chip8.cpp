@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string.h>
 #include <algorithm>
+#include <istream>
 
 
 //Initialize System
@@ -24,8 +25,6 @@ void chip8::initialize(){
     for(int i = 0; i < 80; ++i){
         memory[i] = font_set[i];
     }
-
-
 }
 
 //Load ROM into Memory
@@ -36,9 +35,20 @@ void chip8::load_ROM(char const* filename){
         More information on the two refrences being used:
         http://www.cplusplus.com/reference/ios/ios_base/openmode/
     */
-   // std::ifstream file(filename, std::ios_base::binary | std::ios_base::ate){
-
-    //}
+    std::ifstream file(filename, std::ios_base::binary | std::ios_base::ate){
+        //File pointer is at end of steam
+        //so tellg will return the size of the file
+        std::streampos size = file.tellg();
+        
+        //Create a buffer
+        char* buffer = new char[size];
+        //Fill buffer
+        file.seekg(0, std::ios::beg);
+        file.read(buffer, size);
+        
+        //Close file
+        file.close();
+    }
 
     //TODO Load ROM data in Chip8 memory
    
