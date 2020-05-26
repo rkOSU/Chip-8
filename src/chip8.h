@@ -4,6 +4,7 @@ class chip8
 {
     public:
         void load_ROM(char const* filename);
+        void initialize();
 
     private:
         //Array for 16 8-bit registers
@@ -33,8 +34,6 @@ class chip8
 
         //16-bit Opcode
         uint16_t opcode;
-
-        void initialize();
 
         //Font Set (16 characters at 5 bytes each)
         uint8_t font_set[16*5] = {

@@ -1,5 +1,7 @@
 #include "chip8.h"
 #include <fstream>
+#include <string.h>
+#include <algorithm>
 
 
 //Initialize System
@@ -9,12 +11,16 @@ void chip8::initialize(){
     index_reg = 0; //Reset index register
     sp = 0; //Reset stack pointer
 
-    //TODO: Clear display
-    //TODO: Clear stack
-    //TODO: Clear registers V0-VF
-    //TODO: Clear memory
+    //Clear display
+    memset(display, 0, sizeof(display));
+    //Clear stack
+    memset(stack, 0, sizeof(stack));
+    //Clear registers V0-VF
+    memset(registers, 0, sizeof(registers));
+    //Clear memory
+    memset(memory, 0, sizeof(memory));
 
-    //Load fontset
+    //Load fontset (0x50 = 80)
     for(int i = 0; i < 80; ++i){
         memory[i] = font_set[i];
     }
@@ -30,11 +36,11 @@ void chip8::load_ROM(char const* filename){
         More information on the two refrences being used:
         http://www.cplusplus.com/reference/ios/ios_base/openmode/
     */
-    std::ifstream file(filename, std::ios_base::binary | std::ios_base::ate){
+   // std::ifstream file(filename, std::ios_base::binary | std::ios_base::ate){
 
-    }
+    //}
 
     //TODO Load ROM data in Chip8 memory
-
+   
     
 }
