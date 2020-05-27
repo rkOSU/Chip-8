@@ -7,4 +7,5 @@ int main(int argc, char **argv) {
     cout << "Hello Chip";
     chip8 chip;
     chip.initialize();
+    cout << ((0xAF34 & 0x00F0) >> 4) ;
 }
