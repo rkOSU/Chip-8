@@ -5,6 +5,7 @@ class chip8
     public:
         void load_ROM(char const* filename);
         void initialize();
+        void emulate();
 
     private:
         //Array for 16 8-bit registers

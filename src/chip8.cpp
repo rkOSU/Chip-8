@@ -1,8 +1,9 @@
 #include "chip8.h"
 #include <fstream>
 #include <string.h>
-#include <algorithm>
+#include <iostream>
 #include <istream>
+using namespace std;
 
 
 //Initialize System
@@ -48,9 +49,60 @@ void chip8::load_ROM(char const* filename){
         
         //Close file
         file.close();
+    
+        //Load ROM data into memory
+        unsigned int start_pos = 0x200;
+        for(int i = 0; i < size; i++){
+            memory[start_pos] = buffer[i]; 
+        } 
+    }
+}
+
+
+void chip8::emulate(){
+    
+    //Fetch opcode
+    /*  An opcode is 16 bits or 2 bytes so shift
+        8 bits to the left and combine with next byte to make
+        full 2 byte opcode.
+    */
+    opcode = memory[pc] << 8 | memory[pc+1];
+
+    //TODO: Decode opcode
+    switch(opcode & 0xF000){
+        //0x0NNN: Jump to a machine code routine at NNN
+        case 0x0000: 
+            //NONE
+            break;
+        //0x1NNN: Jump to address NNN
+        case 0x1000:
+            pc = opcode & 0x0FFF;
+            break;
+        //0x2NNN: Call subroutine at NNN
+        case 0x2000:
+            ++sp;
+            stack[sp] = pc;
+            pc = opcode & 0x0FFF;
+            break;
+        //0xANNN: Set index register to NNN
+        case 0xA000:
+            index_reg = opcode & 0x0FFF;
+            break;
+        //0xBNNN: Jump to location NNN + V0    
+        case 0xB000:
+            pc = (opcode & 0x0FFF) + registers[0];
+            break;;
+        
+        default:
     }
 
-    //TODO Load ROM data in Chip8 memory
-   
-    
+    //TODO:Execute opcode
+    //TODO: Update timers
 }
+
+
+    
+
+
+
+
