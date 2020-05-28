@@ -6,6 +6,16 @@
 using namespace std;
 
 
+int chip8::extract_x(uint16_t opcode){
+    return ((opcode & 0x0F00) >> 8);
+}
+int chip8::extract_y(uint16_t opcode){
+    return ((opcode & 0x00F0) >> 4);
+}
+int chip8::extract_kk(uint16_t opcode){
+    return (opcode & 0x00FF);
+}
+
 //Initialize System
 void chip8::initialize(){
     pc = 0x200; //The program counter starts at 0x200 in Chip-8 memory
@@ -105,9 +115,9 @@ void chip8::emulate(){
         //0x3XKK: Skip next instructin if Vx == kk    
         case 0x3000:
             //Extract x
-            x = ((opcode & 0x0F00) >> 8);
+            x = extract_x(opcode);
             //Extract kk
-            kk = (opcode & 0x00FF);
+            kk = extract_kk(opcode);
             //Compare and increment PC by 2 if equal
             if(registers[x] == kk){
                 pc +=2;
@@ -116,9 +126,9 @@ void chip8::emulate(){
         //0x4XKK: Skip next instruction if Vx != kk
         case 0x4000:
             //Extract x
-            x = ((opcode & 0x0F00) >> 8);
+            x = extract_x(opcode);
             //Extract kk
-            kk = (opcode & 0x00FF);
+            kk = extract_kk(opcode);
             //Compare and increment PC by 2 if not equal
             if(registers[x] != kk){
                 pc +=2;
@@ -127,13 +137,71 @@ void chip8::emulate(){
         //0x5XY0: Skip next instruction if VX = VY
         case 0x5000:
             //Extract x
-            x = ((opcode & 0x0F00) >> 8);
+            x = extract_x(opcode);
             //Extract y
-            y = ((opcode & 0x00F0) >> 4);
+            y = extract_y(opcode);
             if(registers[x] == registers[y]){
                 pc +=2;
             }
             break;
+        //0x6XKK: Set VX = KK
+        case 0x6000:
+            //Extract x
+            x = extract_x(opcode);
+            //Extract kk
+            kk = extract_kk(opcode);
+
+            registers[x] = kk;
+            break;
+        //0x7XKK: Set VX = VX + KK
+        case 0x7000:
+            //Extract x
+            x = extract_x(opcode);
+            //Extract kk
+            kk = extract_kk(opcode);
+
+            //Add KK to VX
+            int sum = registers[x] + kk;
+            //Set sum as VX
+            registers[x] = sum;
+            break;
+
+        //0x8xyN instructions
+        case 0x8000:
+            switch(opcode & 0x000F){
+                //0x8XY0: Set VX = VY
+                case 0:
+                    x = extract_x(opcode);
+                    y = extract_y(opcode);
+
+                    registers[x] = registers[y];
+                    break;
+                //0x8XY1: Set VX = VX OR VY
+                case 1:
+                    //Perform a bitwise OR on VX and VY and then store in VX
+                    x = extract_x(opcode);
+                    y = extract_y(opcode);
+
+                    registers[x] = (registers[x] | registers[y]);
+                    break;
+                //0x8XY2: Set VX = VX AND VY
+                case 2:
+                    //Perform a bitwise AND on VX and VY and then store in VX
+                    x = extract_x(opcode);
+                    y = extract_y(opcode);
+
+                    registers[x] = (registers[x] & registers[y]);
+                    break;
+                //0x8XY3: Set VX = VX XOR VY
+                case 3:
+                    //Perform a bitwise XOR on VX and VY and then store in VX
+                    x = extract_x(opcode);
+                    y = extract_y(opcode);
+
+                    registers[x] = (registers[x] ^ registers[y]);
+                    break;    
+
+            }
 
         //0xANNN: Set index register to NNN
         case 0xA000:

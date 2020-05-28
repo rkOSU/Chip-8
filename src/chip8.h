@@ -56,6 +56,10 @@ class chip8
             0xF0, 0x80, 0xF0, 0x80, 0x80  // F  
         };
 
+        int extract_x(uint16_t opcode);
+        int extract_y(uint16_t opcode);
+        int extract_kk(uint16_t opcode);
+
 };    
 
 
