@@ -3,6 +3,8 @@
 #include <string.h>
 #include <iostream>
 #include <istream>
+#include <cmath>
+
 using namespace std;
 
 
@@ -75,6 +77,7 @@ void chip8::emulate(){
     int x = 0;
     int y = 0;
     int kk = 0;
+    int sum = 0;
     //Fetch opcode
     /*  An opcode is 16 bits or 2 bytes so shift
         8 bits to the left and combine with next byte to make
@@ -161,7 +164,7 @@ void chip8::emulate(){
             kk = extract_kk(opcode);
 
             //Add KK to VX
-            int sum = registers[x] + kk;
+            sum = registers[x] + kk;
             //Set sum as VX
             registers[x] = sum;
             break;
@@ -200,7 +203,87 @@ void chip8::emulate(){
 
                     registers[x] = (registers[x] ^ registers[y]);
                     break;    
+                //0x8XY4: Set VX = VX + VY, set VF = carry
+                case 4:
+                    x = extract_x(opcode);
+                    y = extract_y(opcode);
 
+                    //Find sum
+                    sum = registers[x] + registers[y];
+                    //Set VF = 1 if sum > 255
+                    if(sum > 255){
+                        registers[15] = 1;
+                    }else{
+                        registers[15] = 0;
+                    }
+
+                    //Store lowest 8 bits of sum in VX
+                    registers[x] = (sum & 0xFF);
+                    break;
+                //0x8XY5: Set Vx = Vx - Vy, set VF = NOT borrow
+                case 5:
+                    x = extract_x(opcode);
+                    y = extract_y(opcode);
+
+                    if(registers[x] > registers[y]){
+                        registers[15] = 1;
+                    }else{
+                        registers[15] = 0;
+                    }
+
+                    registers[x] = (registers[x] - registers[y]);
+                    break;
+                //0x8XY6: Set Vx = Vx SHR 1.
+                case 6:
+                    x = extract_x(opcode);
+                    y = extract_y(opcode);
+                    
+                    //Check if LSB is 1
+                    if(registers[x] & 1){
+                        registers[15] = 1;
+                    }else{
+                        registers[15] = 0;
+                    }
+
+                    //Divide Vx by 2
+                    registers[x] /= 2;
+                    break;
+                //0x8XY7: Set Vx = Vy - Vx, set VF = NOT borrow.
+                case 7:
+                    x = extract_x(opcode);
+                    y = extract_y(opcode);
+
+                    if(registers[y] > registers[x]){
+                        registers[15] = 1;
+                    }else{
+                        registers[15] = 0;
+                    }
+                    //Subtrack Vx from Vy and store in Vx
+                    registers[x] = (registers[y] - registers[x]);
+                    break;
+                //0x8XYE: Set Vx = Vx SHL 1.
+                case 0xE:
+                    x = extract_x(opcode);
+                    //Find MSB of Vx
+                    int MSB = (int)(log2(registers[x]));
+                    //Compare
+                    if(MSB == 1){
+                        registers[15] = 1;
+                    }else{
+                        registers[15] = 0;
+                    }
+                    //Multiply Vx by 2
+                    registers[x] *= 2;
+                    break;
+            }
+            break;
+        //0x9xy0: Skip next instruction if Vx != Vy.
+        case 0x9000:
+            x = extract_x(opcode);
+            y = extract_y(opcode);
+
+            if(registers[x] != registers[y]){
+                pc +=2;
             }
 
         //0xANNN: Set index register to NNN

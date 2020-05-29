@@ -1,11 +1,15 @@
 #include "chip8.cpp"
 #include <fstream>
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 int main(int argc, char **argv) {
     cout << "Hello Chip";
     chip8 chip;
     chip.initialize();
-    cout << ((0xAF34 & 0x00F0) >> 4) ;
+     
+    int k = (int)(log2(364));
+    cout << k;
+
 }
