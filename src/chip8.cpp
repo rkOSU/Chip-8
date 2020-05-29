@@ -94,6 +94,7 @@ void chip8::emulate(){
                 //0x00E0 Clear the display
                 case 0x0000:
                     memset(display, 0, sizeof(display));
+                    pc +=2;
                     break;
                 //0x00EE: Return from a subroutine
                 case 0x000E:
@@ -125,6 +126,7 @@ void chip8::emulate(){
             if(registers[x] == kk){
                 pc +=2;
             }
+            pc +=2;
             break;
         //0x4XKK: Skip next instruction if Vx != kk
         case 0x4000:
@@ -134,6 +136,8 @@ void chip8::emulate(){
             kk = extract_kk(opcode);
             //Compare and increment PC by 2 if not equal
             if(registers[x] != kk){
+                pc +=4;
+            }else{
                 pc +=2;
             }
             break;
@@ -144,6 +148,8 @@ void chip8::emulate(){
             //Extract y
             y = extract_y(opcode);
             if(registers[x] == registers[y]){
+                pc +=4;
+            }else{
                 pc +=2;
             }
             break;
@@ -155,6 +161,7 @@ void chip8::emulate(){
             kk = extract_kk(opcode);
 
             registers[x] = kk;
+            pc +=2;
             break;
         //0x7XKK: Set VX = VX + KK
         case 0x7000:
@@ -167,6 +174,7 @@ void chip8::emulate(){
             sum = registers[x] + kk;
             //Set sum as VX
             registers[x] = sum;
+            pc +=2;
             break;
 
         //0x8xyN instructions
@@ -178,6 +186,7 @@ void chip8::emulate(){
                     y = extract_y(opcode);
 
                     registers[x] = registers[y];
+                    pc +=2;
                     break;
                 //0x8XY1: Set VX = VX OR VY
                 case 1:
@@ -186,6 +195,7 @@ void chip8::emulate(){
                     y = extract_y(opcode);
 
                     registers[x] = (registers[x] | registers[y]);
+                    pc +=2;
                     break;
                 //0x8XY2: Set VX = VX AND VY
                 case 2:
@@ -194,6 +204,7 @@ void chip8::emulate(){
                     y = extract_y(opcode);
 
                     registers[x] = (registers[x] & registers[y]);
+                    pc +=2;
                     break;
                 //0x8XY3: Set VX = VX XOR VY
                 case 3:
@@ -202,6 +213,7 @@ void chip8::emulate(){
                     y = extract_y(opcode);
 
                     registers[x] = (registers[x] ^ registers[y]);
+                    pc +=2;
                     break;    
                 //0x8XY4: Set VX = VX + VY, set VF = carry
                 case 4:
@@ -219,6 +231,7 @@ void chip8::emulate(){
 
                     //Store lowest 8 bits of sum in VX
                     registers[x] = (sum & 0xFF);
+                    pc +=2;
                     break;
                 //0x8XY5: Set Vx = Vx - Vy, set VF = NOT borrow
                 case 5:
@@ -232,6 +245,7 @@ void chip8::emulate(){
                     }
 
                     registers[x] = (registers[x] - registers[y]);
+                    pc +=2;
                     break;
                 //0x8XY6: Set Vx = Vx SHR 1.
                 case 6:
@@ -247,6 +261,7 @@ void chip8::emulate(){
 
                     //Divide Vx by 2
                     registers[x] /= 2;
+                    pc +=2;
                     break;
                 //0x8XY7: Set Vx = Vy - Vx, set VF = NOT borrow.
                 case 7:
@@ -260,6 +275,7 @@ void chip8::emulate(){
                     }
                     //Subtrack Vx from Vy and store in Vx
                     registers[x] = (registers[y] - registers[x]);
+                    pc +=2;
                     break;
                 //0x8XYE: Set Vx = Vx SHL 1.
                 case 0xE:
@@ -274,6 +290,7 @@ void chip8::emulate(){
                     }
                     //Multiply Vx by 2
                     registers[x] *= 2;
+                    pc +=2;
                     break;
             }
             break;
@@ -283,20 +300,88 @@ void chip8::emulate(){
             y = extract_y(opcode);
 
             if(registers[x] != registers[y]){
-                pc +=2;
+                pc +=4;
             }
+            pc +=2;
+            break;
 
         //0xANNN: Set index register to NNN
         case 0xA000:
             index_reg = opcode & 0x0FFF;
+            pc +=2;
             break;
         //0xBNNN: Jump to location NNN + V0    
         case 0xB000:
             pc = (opcode & 0x0FFF) + registers[0];
             break;
-        
-    
-        
+        //0xCxkk: Set Vx = random byte AND kk.
+        case 0xC000:
+            x = extract_x(opcode);
+            kk = extract_kk(opcode);
+
+            int rand_num = (rand() % 0xFF);
+            //AND with kk and store in Vx
+            registers[x] = (rand_num & kk);
+            pc+=2;
+            break;
+        //0xDxyn:
+        case 0xD000:
+            unsigned short x = extract_x(opcode);
+            unsigned short y = extract_y(opcode);
+            unsigned short height = opcode & 0x000F;
+            unsigned short pixel;
+            
+            registers[0xF] = 0;
+            for (int yline = 0; yline < height; yline++)
+            {
+                pixel = memory[index_reg + yline];
+                for(int xline = 0; xline < 8; xline++)
+                {
+                if((pixel & (0x80 >> xline)) != 0)
+                {
+                    if(display[(x + xline + ((y + yline) * 64))] == 1)
+                    registers[0xF] = 1;                                 
+                    display[x + xline + ((y + yline) * 64)] ^= 1;
+                }
+                }
+            }
+            
+            draw_flag = true;
+            pc += 2;
+            break;
+
+        case 0xE000:
+            switch(opcode & 0x00FF){
+                //0xEx9e: Skip next instruction if key with the value of Vx is pressed
+                case 0x009E:
+                    x = extract_x(opcode);
+                    if(key[registers[x] != 0]){
+                        pc +=4;
+                    }else{
+                        pc +=2;
+                    }
+                    break;
+                //0xExA1: Skip next instruction if key with the value of Vx is not pressed.
+                    x = extract_x(opcode);
+                    if(key[registers[x] == 0]){
+                        pc +=4;
+                    }else{
+                        pc +=2;
+                    }
+                    break;
+            }
+            break;
+            case 0xF000:
+                switch(opcode & 0x00FF){
+                    //0xFx07: Set Vx = delay timer value.
+                    case 0x0007:
+                        x = extract_x(opcode);
+                        registers[x] = delay_timer;
+                        pc +=2;
+                        break;
+
+                }
+
 
         
         
