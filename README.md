@@ -26,5 +26,5 @@ Run
 ```
 
 Resources which helped me out immensely:
-https://austinmorlan.com/posts/chip8_emulator/
-http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
+- https://austinmorlan.com/posts/chip8_emulator/
+- http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
