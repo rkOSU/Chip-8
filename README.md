@@ -5,9 +5,9 @@ I wanted to create one of those interpreters/emulators. This should help me deve
 I am not too knowledgeable about SHELL and SDL, so I took the build commands and code for setting up graphics from https://github.com/JamesGriffin/CHIP-8-Emulator
 
 Progress:
--[] Complete opcodes (9 remaining)
--[x] Set up graphics
--[x] Figure out how to load a ROM and run it
+ [] Complete opcodes (9 remaining)
+ [x] Set up graphics
+ [x] Figure out how to load a ROM and run it
 
 Install SDL
 ```
